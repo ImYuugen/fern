@@ -21,6 +21,9 @@
     {
       devShells.${system}.default = pkgs.mkShell rec {
           buildInputs = with pkgs; [
+            pre-commit
+
+
             libxkbcommon
             wayland
             xorg.libX11
