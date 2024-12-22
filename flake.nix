@@ -1,9 +1,12 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/release-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/release-24.11";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    rustacean = {
+      url = "github:mrcjkb/rustaceanvim";
     };
   };
 
@@ -11,6 +14,7 @@
     { self
     , nixpkgs
     , rust-overlay
+    , rustacean
     , ...
     } @ inputs:
     let
@@ -20,33 +24,29 @@
     in
     {
       devShells.${system}.default = pkgs.mkShell rec {
-          buildInputs = with pkgs; [
-            pre-commit
-
-
-            libxkbcommon
-            wayland
-            xorg.libX11
-            xorg.libXcursor
-            xorg.libXrandr
-            xorg.libXi
-  
-            shaderc
-            directx-shader-compiler
-            ocl-icd
-            libGL
-            vulkan-headers
-            vulkan-loader
-            vulkan-tools
-            vulkan-tools-lunarg
-            vulkan-validation-layers
-
-            rust-analyzer
-            rust-bin.stable.latest.default
-          ];
-          shellHook = ''
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${builtins.toString (pkgs.lib.makeLibraryPath buildInputs)}";
-          '';         nativeBuildInputs = with pkgs; [];
+        buildInputs = with pkgs; [
+          pre-commit
+          libxkbcommon
+          wayland
+          xorg.libX11
+          xorg.libXcursor
+          xorg.libXrandr
+          xorg.libXi
+          pkg-config
+          openssl
+          gdk-pixbuf
+          cairo
+          pango
+          gtk3
+          libsoup_3
+          webkitgtk_4_1
+          rustacean.packages.${system}.codelldb
+          rust-analyzer
+          rust-bin.stable.latest.default
+        ];
+        shellHook = ''
+          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${builtins.toString (pkgs.lib.makeLibraryPath buildInputs)}";
+        '';         nativeBuildInputs = with pkgs; [];
       };
     };
 }
