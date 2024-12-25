@@ -3,7 +3,16 @@ name = "fern"
 version = "0.1.0"
 edition = "2021"
 
+[profile.dev]
+opt-level = 0
+debug = "full"
+
+# TODO: profile.release
+
 [dependencies]
-reqwest = "0.12.8"
-tracing = "0.1.40"
+env_logger = "0.11.6"
+log = "0.4.22"
+reqwest = { version = "0.12.9", features = [ "blocking" ] }
+serde = "1.0.216"
+serde_json = "1.0.134"
 xilem = "0.1.0"

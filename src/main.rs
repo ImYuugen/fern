@@ -1,18 +1,16 @@
-use xilem::{
-    view::{button, flex, label},
-    MasonryView, Xilem,
-};
+#![allow(dead_code)]
+#![allow(unused_variables)]
 
-fn app_logic(count: &mut i32) -> impl MasonryView<i32> {
-    flex((
-        button("Reset", |count| *count = 0),
-        button("++", |count| *count += 1),
-        button("--", |count| *count -= 1),
-        label(format!("{}", count)),
-    ))
-}
+use log::info;
 
-fn main() {
-    let app = Xilem::new(0, app_logic);
-    app.run_windowed("Yeehoo".into()).unwrap();
+mod api;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(debug_assertions)]
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "trace");
+        info!("Launching Fern in debug mode, don't get banned!");
+    }
+    env_logger::init();
+    Ok(())
 }
