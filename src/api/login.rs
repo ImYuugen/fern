@@ -1,6 +1,6 @@
 use std::{error::Error, fmt::Display};
 
-use log::{debug, error, trace, warn};
+use log::{debug, error, info, warn};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 
 const BASE_URL: &str = "https://discord.com/api/v10";
@@ -54,6 +54,7 @@ pub fn login(username: String, password: String) -> Result<FernLoginResponse, Bo
         .header(CONTENT_TYPE, "application/json");
 
     if let Ok(tok) = std::fs::read(LOGIN_TOKEN_PATH) {
+        info!("Found login token");
         response = response.header(AUTHORIZATION, tok);
     }
     let response = response
@@ -70,7 +71,7 @@ pub fn login(username: String, password: String) -> Result<FernLoginResponse, Bo
         let flr_string = &response.text()?;
         let flr = serde_json::from_str::<FernLoginResponse>(flr_string)?;
         match std::fs::write(LOGIN_TOKEN_PATH, flr.token.as_ref().unwrap()) {
-            Ok(_) => trace!("Login token cached in {}", LOGIN_TOKEN_PATH),
+            Ok(_) => info!("Login token cached in {}", LOGIN_TOKEN_PATH),
             Err(e) => warn!("Could not cache token in {}: {}", LOGIN_TOKEN_PATH, e),
         }
         Ok(flr)
