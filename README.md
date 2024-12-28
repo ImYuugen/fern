@@ -3,6 +3,19 @@
 A native discord client aimed to be fast, responsive and extensible. *(knocking on wood)*
 Very WIP, you can risk getting banned if you try to use it.
 
+### Why ?
+I'm mostly making this out of curiosity...
+Also because I think electron-based webapps are spawns of the devil and should be replaced
+
+As for the name, the rendering library is called Xilem, so I just chose a vascular plant's name
+
+### How ?
+First and foremost, wrappers need to be created around Discord's API, a lot of it is not officially documented, some digging is needed.
+After those are done, create UI elements and link them to the wrapper.
+
+In the future, add wrappers around the app so that scripts and whatnot can expand its behaviour.
+
+
 **Features & TODOs**
 ✨ = UI Done
 - [ ] Login
@@ -40,17 +53,12 @@ Very WIP, you can risk getting banned if you try to use it.
   - [ ] Block/Unblock
 - [ ] Notifications
 
-### Why ?
-I'm mostly making this out of curiosity...
-Also because I think electron-based webapps are spawns of the devil and should be replaced
-
-As for the name, the rendering library is called Xilem, so I just chose a vascular plant's name
-
-### How ?
-First and foremost, wrappers need to be created around Discord's API, a lot of it is not officially documented, some digging is needed.
-After those are done, create UI elements and link them to the wrapper.
-
-In the future, add wrappers around the app so that scripts and whatnot can expand its behaviour.
+**Under the hood TODOs**
+- [ ] Maintain stable gateway connection
+  - [x] Initial connection
+  - [x] Send heartbeat back
+  - [ ] Handle receiving heartbeat
+  - [ ] Handle absence of HeartbeatACK
 
 ## Contributing
 - Clone the repo
