@@ -9,12 +9,13 @@ mod api;
 mod websocket;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     #[cfg(debug_assertions)]
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "debug");
         info!("Launching Fern in debug mode, don't get banned!");
     }
     env_logger::init();
-    Ok(())
+    // let _flr = api::login::login("".into(), "".into());
+    let _socket_write = websocket::connect::initiate_websocket_con().await;
 }

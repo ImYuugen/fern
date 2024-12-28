@@ -1,51 +1,26 @@
+use std::sync::Arc;
+
 use super::utils::*;
 
-use futures_util::{
-    stream::{SplitSink, SplitStream},
-    StreamExt,
-};
-use log::{info, warn};
-use tokio::net::TcpStream;
-use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
-
-type WsSplitStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
-type WsSplitSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
+use futures_util::StreamExt;
+use tokio::sync::Mutex;
+use tokio_tungstenite::connect_async;
 
 const WEBSOCKET_ADDRESS: &str = "wss://gateway.discord.gg";
 
-async fn handle_incoming(mut read: WsSplitStream) {
-    while let Some(message) = read.next().await {
-        match message {
-            Ok(message) => {
-                info!("Received message: {}", message);
-                let fwsm: Option<FernWebsocketMessage> = match serde_json::from_str(
-                    message
-                        .to_text()
-                        .expect("Message somehow contained non-utf8 bytes"),
-                ) {
-                    Ok(ok) => Some(ok),
-                    Err(_) => None,
-                };
-                if let Some(fwsm) = fwsm {
-                    tokio::spawn(fwsm.handle());
-                } else {
-                    warn!("Unrecognized message received, connection most likely closed");
-                }
-            }
-            Err(error) => {
-                warn!("Error receiving message: {}", error)
-            }
-        }
-    }
-}
-
 /// Creates connection with gateway and starts listening
-pub async fn initiate_websocket_con() {
+/// returns a reference to the write stream, to send messages
+/// Here we need an Arc because both `handle_incoming` and the
+/// client need it
+pub async fn initiate_websocket_con() -> Arc<Mutex<WsSplitSink>> {
+    // TODO: Handle refused connection (GET on /gateway and reconnect)
     let (ws_stream, _) = connect_async(WEBSOCKET_ADDRESS)
         .await
         .expect("Couldn't handshake with server");
-    let (_write, read) = ws_stream.split();
-    let read_handle = tokio::spawn(handle_incoming(read));
+    let (write, read) = ws_stream.split();
+    let write: Arc<Mutex<WsSplitSink>> = Arc::new(Mutex::new(write));
+    let read_handle = tokio::spawn(handle_incoming(read, write.clone()));
     // TODO: Remove once app loop is present
     let _ = tokio::try_join!(read_handle);
+    write
 }

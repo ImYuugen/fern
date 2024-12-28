@@ -1,5 +1,17 @@
-use log::{debug, error};
+use std::sync::Arc;
+
+use log::{debug, error, info, warn};
 use num_traits::FromPrimitive as _;
+
+use futures_util::{
+    stream::{SplitSink, SplitStream},
+    SinkExt, StreamExt,
+};
+use tokio::{net::TcpStream, sync::Mutex};
+use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
+
+type WsSplitStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
+pub type WsSplitSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 
 /// Used for sending and receiving messages
 #[derive(serde::Deserialize, Debug)]
@@ -16,7 +28,7 @@ pub struct FernWebsocketMessage {
 
 impl FernWebsocketMessage {
     /// Consumes the instance, we don't want to execute multiple times
-    pub async fn handle(self) {
+    pub async fn handle(self, write: Arc<Mutex<WsSplitSink>>) {
         use OpCodes::*;
         let Some(opcode) = OpCodes::from_i32(self.op) else {
             error!("Unknown OpCode received, wtf ? : {}", self.op);
@@ -24,7 +36,9 @@ impl FernWebsocketMessage {
         };
         debug!("op {} translates to {:?}", self.op, opcode);
         match opcode {
-            Hello => super::heartbeat::heartbeat_loop(self).await,
+            Hello => super::heartbeat::heartbeat_loop(self, write).await,
+            Heartbeat => {}
+            HeartbeatACK => {}
             _ => todo!("You have yet to implement this"),
         }
     }
@@ -93,4 +107,43 @@ pub enum CloseCodes {
     InvalidAPIVersion,
     InvalidIntents,
     DisallowedIntents,
+}
+
+// Sends `message` to the specified `write` stream, returns wether it succeeded or not
+pub async fn send_message(write: Arc<Mutex<WsSplitSink>>, message: serde_json::Value) -> bool {
+    let message = message.to_string();
+    let mut lock = write.lock().await;
+    match lock.send(Message::text(message)).await {
+        Ok(_) => true,
+        Err(e) => {
+            error!("Failed to send message: {}", e);
+            false
+        }
+    }
+}
+
+pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSink>>) {
+    while let Some(message) = read.next().await {
+        match message {
+            Ok(message) => {
+                info!("Received message: {}", message);
+                let fwsm: Option<FernWebsocketMessage> = match serde_json::from_str(
+                    message
+                        .to_text()
+                        .expect("Message somehow contained non-utf8 bytes"),
+                ) {
+                    Ok(ok) => Some(ok),
+                    Err(_) => None,
+                };
+                if let Some(fwsm) = fwsm {
+                    tokio::spawn(fwsm.handle(write.clone()));
+                } else {
+                    warn!("Unrecognized message received, connection most likely closed");
+                }
+            }
+            Err(error) => {
+                warn!("Error receiving message: {}", error)
+            }
+        }
+    }
 }
