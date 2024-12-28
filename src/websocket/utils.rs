@@ -28,7 +28,7 @@ pub struct FernWebsocketMessage {
 
 impl FernWebsocketMessage {
     /// Consumes the instance, we don't want to execute multiple times
-    pub async fn handle(self, write: Arc<Mutex<WsSplitSink>>) {
+    pub async fn handle(self, write: Arc<Mutex<WsSplitSink>>, state: Arc<Mutex<SocketState>>) {
         use OpCodes::*;
         let Some(opcode) = OpCodes::from_i32(self.op) else {
             error!("Unknown OpCode received, wtf ? : {}", self.op);
@@ -36,12 +36,16 @@ impl FernWebsocketMessage {
         };
         debug!("op {} translates to {:?}", self.op, opcode);
         match opcode {
-            Hello => super::heartbeat::heartbeat_loop(self, write).await,
-            Heartbeat => {}
-            HeartbeatACK => {}
+            Hello => super::heartbeat::heartbeat_loop(self, write, state).await,
+            Heartbeat => super::heartbeat::send_heartbeat(write, state).await,
+            HeartbeatACK => state.lock().await.heartbeat_ack = true,
             _ => todo!("You have yet to implement this"),
         }
     }
+}
+
+pub struct SocketState {
+    pub heartbeat_ack: bool,
 }
 
 #[repr(i32)]
@@ -123,6 +127,9 @@ pub async fn send_message(write: Arc<Mutex<WsSplitSink>>, message: serde_json::V
 }
 
 pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSink>>) {
+    let state = Arc::new(Mutex::new(SocketState {
+        heartbeat_ack: true, // No ACK for first heartbeat
+    }));
     while let Some(message) = read.next().await {
         match message {
             Ok(message) => {
@@ -136,7 +143,7 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
                     Err(_) => None,
                 };
                 if let Some(fwsm) = fwsm {
-                    tokio::spawn(fwsm.handle(write.clone()));
+                    tokio::spawn(fwsm.handle(write.clone(), state.clone()));
                 } else {
                     warn!("Unrecognized message received, connection most likely closed");
                 }
