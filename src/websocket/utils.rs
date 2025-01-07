@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use log::{debug, error, info, warn};
+use log::{debug, error, warn};
 use num_traits::FromPrimitive as _;
 
 use futures_util::{
@@ -28,7 +28,11 @@ pub struct FernWebsocketMessage {
 
 impl FernWebsocketMessage {
     /// Consumes the instance, we don't want to execute multiple times
-    pub async fn handle(self, write: Arc<Mutex<WsSplitSink>>, state: Arc<Mutex<SocketState>>) {
+    pub async fn handle(
+        self,
+        write: Arc<Mutex<WsSplitSink>>,
+        socket_state: Arc<Mutex<SocketState>>,
+    ) {
         use OpCodes::*;
         let Some(opcode) = OpCodes::from_i32(self.op) else {
             error!("Unknown OpCode received, wtf ? : {}", self.op);
@@ -36,10 +40,28 @@ impl FernWebsocketMessage {
         };
         debug!("op {} translates to {:?}", self.op, opcode);
         match opcode {
-            Hello => super::heartbeat::heartbeat_loop(self, write, state).await,
-            Heartbeat => super::heartbeat::send_heartbeat(write, state).await,
-            HeartbeatACK => state.lock().await.heartbeat_ack = true,
+            Dispatch => self.handle_dispatch().await,
+            Hello => super::heartbeat::heartbeat_loop(self, write, socket_state).await,
+            Heartbeat => super::heartbeat::send_heartbeat(write, socket_state).await,
+            HeartbeatACK => socket_state.lock().await.heartbeat_ack = true,
             _ => todo!("You have yet to implement this"),
+        }
+    }
+
+    async fn handle_dispatch(self) {
+        let Some(dispatch_event) = self.t else {
+            error!("Received Dispatch with no t !");
+            return;
+        };
+        debug!("Dispatch has event \"{}\"", dispatch_event);
+
+        match dispatch_event.as_str() {
+            "READY" => {
+                debug!("Need to translate");
+            }
+            _ => {
+                todo!("You have yet to implement this event");
+            }
         }
     }
 }
@@ -127,13 +149,12 @@ pub async fn send_message(write: Arc<Mutex<WsSplitSink>>, message: serde_json::V
 }
 
 pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSink>>) {
-    let state = Arc::new(Mutex::new(SocketState {
+    let socket_state = Arc::new(Mutex::new(SocketState {
         heartbeat_ack: true, // No ACK for first heartbeat
     }));
     while let Some(message) = read.next().await {
         match message {
             Ok(message) => {
-                info!("Received message: {}", message);
                 let fwsm: Option<FernWebsocketMessage> = match serde_json::from_str(
                     message
                         .to_text()
@@ -143,9 +164,10 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
                     Err(_) => None,
                 };
                 if let Some(fwsm) = fwsm {
-                    tokio::spawn(fwsm.handle(write.clone(), state.clone()));
+                    tokio::spawn(fwsm.handle(write.clone(), socket_state.clone()));
                 } else {
                     warn!("Unrecognized message received, connection most likely closed");
+                    debug!("Message: {}", message.to_text().unwrap());
                 }
             }
             Err(error) => {
