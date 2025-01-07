@@ -21,7 +21,7 @@ pub struct FernWebsocketMessage {
     /// Arbitrary data
     pub d: serde_json::Value,
     /// Sequence number, used for resume/heartbeat (null if opcode != DISPATCH)
-    pub s: Option<String>,
+    pub s: Option<i32>,
     /// Event name for this payload (null if opcode != DISPATCH)
     pub t: Option<String>,
 }
@@ -39,6 +39,10 @@ impl FernWebsocketMessage {
             return;
         };
         debug!("op {} translates to {:?}", self.op, opcode);
+        if let Some(seq) = self.s {
+            socket_state.lock().await.heartbeat_sequence = seq
+        }
+
         match opcode {
             Dispatch => self.handle_dispatch().await,
             Hello => super::heartbeat::heartbeat_loop(self, write, socket_state).await,
@@ -56,7 +60,7 @@ impl FernWebsocketMessage {
         debug!("Dispatch has event \"{}\"", dispatch_event);
 
         match dispatch_event.as_str() {
-            "READY" => {
+            "READY" | "READY_SUPPLEMENTAL" => {
                 debug!("Need to translate");
             }
             _ => {
@@ -68,6 +72,7 @@ impl FernWebsocketMessage {
 
 pub struct SocketState {
     pub heartbeat_ack: bool,
+    pub heartbeat_sequence: i32,
 }
 
 #[repr(i32)]
@@ -151,6 +156,7 @@ pub async fn send_message(write: Arc<Mutex<WsSplitSink>>, message: serde_json::V
 pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSink>>) {
     let socket_state = Arc::new(Mutex::new(SocketState {
         heartbeat_ack: true, // No ACK for first heartbeat
+        heartbeat_sequence: 0,
     }));
     while let Some(message) = read.next().await {
         match message {
