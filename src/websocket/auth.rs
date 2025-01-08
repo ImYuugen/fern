@@ -7,7 +7,7 @@ use super::utils::{send_message, WsSplitSink};
 
 pub async fn identify(write: Arc<Mutex<WsSplitSink>>, token: &String) {
     let os_name = std::env::consts::OS[0..1].to_uppercase() + &std::env::consts::OS[1..];
-    // https://docs.discord.sex/topics/gateway#list-of-intents
+    // /topics/gateway#list-of-intents
     // enable every event
     let intents = (0..=25).fold(0, |acu, n| acu | 1 << n);
     // opt-in everything #gourmand
