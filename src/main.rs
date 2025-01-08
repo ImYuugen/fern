@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod api;
+mod structs;
 mod websocket;
 
 #[macro_use]

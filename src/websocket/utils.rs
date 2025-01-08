@@ -10,6 +10,8 @@ use futures_util::{
 use tokio::{net::TcpStream, sync::Mutex};
 use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
+use super::dispatch::handle_dispatch;
+
 type WsSplitStream = SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 pub type WsSplitSink = SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>;
 
@@ -44,28 +46,11 @@ impl FernWebsocketMessage {
         }
 
         match opcode {
-            Dispatch => self.handle_dispatch().await,
+            Dispatch => handle_dispatch(self).await,
             Hello => super::heartbeat::heartbeat_loop(self, write, socket_state).await,
             Heartbeat => super::heartbeat::send_heartbeat(write, socket_state).await,
             HeartbeatACK => socket_state.lock().await.heartbeat_ack = true,
             _ => todo!("You have yet to implement this"),
-        }
-    }
-
-    async fn handle_dispatch(self) {
-        let Some(dispatch_event) = self.t else {
-            error!("Received Dispatch with no t !");
-            return;
-        };
-        debug!("Dispatch has event \"{}\"", dispatch_event);
-
-        match dispatch_event.as_str() {
-            "READY" | "READY_SUPPLEMENTAL" => {
-                debug!("Need to translate");
-            }
-            _ => {
-                todo!("You have yet to implement this event");
-            }
         }
     }
 }

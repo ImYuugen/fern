@@ -1,6 +1,6 @@
 pub mod user {
     /// Represents both full and partial user
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct User {
         /// ID of the user, Snowflake
         id: String,
@@ -56,7 +56,7 @@ pub mod user {
         /// WEBAUTHN = 1, TOTP, SMS
         authenticator_types: Option<Vec<u8>>,
     }
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     struct AvatarDecorationData {
         /// Avatar decoration hash
         asset: String,
@@ -65,7 +65,7 @@ pub mod user {
         /// Unix timestamp of avatar decoration expiration
         expires_at: Option<i32>,
     }
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     struct PrimaryGuild {
         /// Whether the user is displaying their clan tag
         identity_enabled: bool,
@@ -77,14 +77,13 @@ pub mod user {
         badge: Option<String>,
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct Relationship {
         id: String,
         /// ~NONE~, FRIEND, BLOCKED, INCOMING, OUTGOING, IMPLICIT, ~SUGGESTION~
         #[serde(rename = "type")]
         kind: u8,
-        /// WARN: Partial user !!
-        user: User,
+        user_id: String,
         /// The nickname of the user in this relationship
         nickname: Option<String>,
         /// Is it flagged as spam
@@ -93,12 +92,12 @@ pub mod user {
         since: Option<String>,
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct Connection {
         // TODO: /resources/user#connection-object
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct Presence {
         user: User, // Partial
         /// Snowflake
@@ -108,40 +107,83 @@ pub mod user {
         activities: Vec<Activity>,
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct MergedPresences {
         friends: Vec<Presence>,
         guilds: Vec<Vec<Presence>>,
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct Activity {
         // TODO: /resources/presence#activity-object
     }
 
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct ClientStatus {
         // TODO: /resources/presence#client-status-object
+    }
+
+    #[derive(serde::Deserialize, Debug)]
+    pub struct UserExperiment {
+        /// Murmur3 hash of the experiment's name
+        hash: u32,
+        /// Current version of the rollout
+        revision: u32,
+        /// The requesting user or fingerprint's experiment bucket
+        bucket: u32,
+        /// Experiment override present: -1 == false, 0 == true
+        #[serde(rename = "override")]
+        override_present: i8,
+        /// The internal population group the requesting user is in
+        population: u32,
+        /// The rollout position to use: mmh3.hash(...) % 10000
+        hash_result: u16,
+        /// The experiment's A/A testing mode, 0 or 1
+        aa_mode: i8,
+        /// Is analytics trigger debugging enabled, 0 or 1
+        trigger_debugging: i8,
     }
 }
 
 pub mod guild {
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct GatewayGuild {
         // TODO: /topics/gateway-events#gateway-guild-object
     }
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct GuildJoinRequest {
         // TODO: /resources/guild#guild-join-request-structure
     }
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct GuildMember {
         // TODO: /resources/guild#guild-member-object
+    }
+
+    #[derive(serde::Deserialize, Debug)]
+    pub struct GuildExperiment {
+        /// mm3 hashed experiment name
+        hash: u32,
+        /// Experiment name formatted as `year-month_name`
+        hash_key: Option<String>,
+        revision: u32,
+        // Too lazy to do all those structs
+        // /topics/experiments#experiment-population-object
+        populations: Vec<serde_json::Value>,
+        // /topics/experiments#experiment-bucket-override-object
+        overrides: Vec<serde_json::Value>,
+        // /topics/experiments#experiment-population-object
+        overrides_formatted: Vec<Vec<serde_json::Value>>,
+        /// Experiment name formatted as `year-month_name` the experiment is dependant on
+        holdout_name: Option<String>,
+        /// The required bucket for the experiment
+        holdout_bucket: Option<u32>,
+        aa_mode: i8,
+        trigger_debugging: i8,
     }
 }
 
 pub mod channel {
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct Channel {
         // TODO: /resources/channel#channel-object
     }
@@ -149,7 +191,7 @@ pub mod channel {
 
 // TODO: Find a better name or put the structs elsewhere
 pub mod misc {
-    #[derive(serde::Deserialize)]
+    #[derive(serde::Deserialize, Debug)]
     pub struct GatewayApplication {
         /// Snowflake
         id: String,
