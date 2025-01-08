@@ -8,6 +8,7 @@ I'm mostly making this out of curiosity...
 Also because I think electron-based webapps are spawns of the devil and should be replaced
 
 As for the name, the rendering library is called Xilem, so I just chose a vascular plant's name
+Also I like plants
 
 ### How ?
 First and foremost, wrappers need to be created around Discord's API, a lot of it is not officially documented, some digging is needed.
@@ -54,11 +55,15 @@ In the future, add wrappers around the app so that scripts and whatnot can expan
 - [ ] Notifications
 
 **Under the hood TODOs**
-- [ ] Maintain stable gateway connection
-  - [x] Initial connection
-  - [x] Send heartbeat back
-  - [ ] Handle receiving heartbeat
-  - [ ] Handle absence of HeartbeatACK
+- [x] Maintain stable gateway connection
+- [ ] Handle Dispatch
+  - [x] READY
+  - [ ] READY_SUPPLEMENTAL
+  - [ ] RESUMED
+  - [ ] REMOTE_COMMAND
+  - [ ] PRESENCE_UPDATE
+  - [ ] MESSAGE_{CREATE,UPDATE,DELETE}
+  - [ ] CALL_{CREATE,UPDATE,DELETE}
 
 ## Contributing
 - Clone the repo
