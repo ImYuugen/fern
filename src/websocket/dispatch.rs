@@ -81,26 +81,30 @@ pub async fn handle_dispatch(fwsm: FernWebsocketMessage) {
         error!("Received Dispatch with no t !");
         return;
     };
+    debug!("Received {} dispatch", dispatch_event.as_str());
 
     match dispatch_event.as_str() {
         // TODO: Handle the 7 gazillion events
         "READY" => {
             let ready_event = serde_json::from_value::<ReadyEvent>(fwsm.d);
-            let ready_event = match ready_event {
+            let _ready_event = match ready_event {
                 Ok(re) => re,
                 Err(e) => {
                     error!("You messed up the structs ! {}", e);
                     std::process::exit(42);
                 }
             };
-            debug!("READY Translated to {:?}", ready_event);
+            trace!("Succesfully translated READY payload");
         }
         "READY_SUPPLEMENTAL" => {
-            trace!("READY_SUPPLEMENTAL");
+            trace!("READY_SUPPLEMENTAL {}", fwsm.d);
         }
         "RESUMED" => {
-            trace!("RESUMED");
+            trace!("RESUMED {}", fwsm.d);
         }
-        ev => todo!("You have yet to implement {}", ev),
+        "SESSIONS_REPLACE" => {
+            trace!("SESSIONS_REPLACE {}", fwsm.d);
+        }
+        ev => error!("Unimplemented {} : {}", ev, fwsm.d),
     }
 }
