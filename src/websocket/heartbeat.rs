@@ -1,23 +1,24 @@
 use std::sync::Arc;
 
-use log::{debug, error, trace};
+use log::{debug, error};
 use tokio::sync::Mutex;
 
 use super::utils::*;
 
 #[inline]
 pub async fn send_heartbeat(write: Arc<Mutex<WsSplitSink>>, socket_state: Arc<Mutex<SocketState>>) {
+    let sequence = socket_state.lock().await.heartbeat_sequence;
     let success = send_message(
         write.clone(),
         serde_json::json!({
             "op": OpCodes::Heartbeat as i32,
-            "d": socket_state.lock().await.heartbeat_sequence,
+            "d": sequence,
         }),
     )
     .await;
     if success {
         socket_state.lock().await.heartbeat_ack = false;
-        trace!("Succesfully sent heartbeat");
+        debug!("Succesfully sent heartbeat with number {}", sequence);
     } else {
         error!("Failed to send heartbeat");
     }
