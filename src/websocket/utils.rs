@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use num_traits::FromPrimitive as _;
 
 use futures_util::{
@@ -8,7 +8,10 @@ use futures_util::{
     SinkExt, StreamExt,
 };
 use tokio::{net::TcpStream, sync::Mutex};
-use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
+use tokio_tungstenite::{
+    tungstenite::{protocol::CloseFrame, Message},
+    MaybeTlsStream, WebSocketStream,
+};
 
 use super::dispatch::handle_dispatch;
 
@@ -144,13 +147,10 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
         heartbeat_sequence: 0,
     }));
     while let Some(message) = read.next().await {
+        use tokio_tungstenite::tungstenite::protocol::Message;
         match message {
-            Ok(message) => {
-                let fwsm: Option<FernWebsocketMessage> = match serde_json::from_str(
-                    message
-                        .to_text()
-                        .expect("Message somehow contained non-utf8 bytes"),
-                ) {
+            Ok(Message::Text(message)) => {
+                let fwsm: Option<FernWebsocketMessage> = match serde_json::from_str(&message) {
                     Ok(ok) => Some(ok),
                     Err(_) => None,
                 };
@@ -158,12 +158,30 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
                     tokio::spawn(fwsm.handle(write.clone(), socket_state.clone()));
                 } else {
                     warn!("Unrecognized message received, connection most likely closed");
-                    debug!("Message: {}", message.to_text().unwrap());
+                    debug!("Message: {}", message);
                 }
+            }
+            Ok(Message::Close(close_frame)) => {
+                // Nothing after close frame, no need to spawn task
+                handle_close(close_frame, write.clone()).await;
+            }
+            Ok(m) => {
+                warn!("Received unhandled message {:?}", m);
             }
             Err(error) => {
                 warn!("Error receiving message: {}", error)
             }
         }
     }
+    info!("handle_incoming loop stopped");
+}
+
+async fn handle_close(close_frame: Option<CloseFrame>, _write: Arc<Mutex<WsSplitSink>>) {
+    match close_frame {
+        Some(cf) => debug!(
+            "Received close frame with code {} and reason \"{}\"",
+            cf.code, cf.reason
+        ),
+        None => warn!("Connection closed with empty frame"),
+    };
 }
