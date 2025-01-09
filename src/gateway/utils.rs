@@ -8,10 +8,7 @@ use futures_util::{
     SinkExt, StreamExt,
 };
 use tokio::{net::TcpStream, sync::Mutex};
-use tokio_tungstenite::{
-    tungstenite::{protocol::CloseFrame, Message},
-    MaybeTlsStream, WebSocketStream,
-};
+use tokio_tungstenite::{tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
 use super::dispatch::handle_dispatch;
 
@@ -163,7 +160,7 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
             }
             Ok(Message::Close(close_frame)) => {
                 // Nothing after close frame, no need to spawn task
-                handle_close(close_frame, write.clone()).await;
+                super::disconnect::handle_close(close_frame, write.clone()).await;
             }
             Ok(m) => {
                 warn!("Received unhandled message {:?}", m);
@@ -174,14 +171,4 @@ pub async fn handle_incoming(mut read: WsSplitStream, write: Arc<Mutex<WsSplitSi
         }
     }
     info!("handle_incoming loop stopped");
-}
-
-async fn handle_close(close_frame: Option<CloseFrame>, _write: Arc<Mutex<WsSplitSink>>) {
-    match close_frame {
-        Some(cf) => debug!(
-            "Received close frame with code {} and reason \"{}\"",
-            cf.code, cf.reason
-        ),
-        None => warn!("Connection closed with empty frame"),
-    };
 }

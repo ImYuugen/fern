@@ -12,7 +12,7 @@ const WEBSOCKET_ADDRESS: &str = "wss://gateway.discord.gg";
 /// returns a reference to the write stream, to send messages
 /// Here we need an Arc because both `handle_incoming` and the
 /// client need it
-pub async fn initiate_websocket_con() -> Arc<Mutex<WsSplitSink>> {
+pub async fn initiate_gateway_connection() -> Arc<Mutex<WsSplitSink>> {
     // TODO: Handle refused connection (GET on /gateway and reconnect)
     let (ws_stream, _) = connect_async(WEBSOCKET_ADDRESS)
         .await

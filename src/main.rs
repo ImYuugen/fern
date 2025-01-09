@@ -1,13 +1,13 @@
 #![allow(dead_code)]
 
 mod api;
+mod gateway;
 mod structs;
-mod websocket;
 
 #[macro_use]
 extern crate num_derive;
 
-use crate::websocket::auth::identify;
+use crate::gateway::auth::identify;
 use log::info;
 
 #[tokio::main]
@@ -19,8 +19,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     env_logger::init();
     let flr = api::login::login("".into(), "".into()).await?;
-    let socket_write = websocket::connect::initiate_websocket_con().await;
+    let socket_write = gateway::connect::initiate_gateway_connection().await;
     identify(socket_write.clone(), &flr.token.unwrap()).await;
+    // HACK: Remove ts once you get a proper app loop
     let _ = tokio::join!(tokio::spawn(async {
         std::thread::sleep(std::time::Duration::from_secs(3600))
     }));
