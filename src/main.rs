@@ -22,8 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let socket_write = gateway::connect::initiate_gateway_connection().await;
     identify(socket_write.clone(), &flr.token.unwrap()).await;
     // HACK: Remove ts once you get a proper app loop
-    let _ = tokio::join!(tokio::spawn(async {
-        std::thread::sleep(std::time::Duration::from_secs(3600))
-    }));
+    tokio::signal::ctrl_c().await?;
+    gateway::disconnect::disconnect(socket_write).await;
     Ok(())
 }

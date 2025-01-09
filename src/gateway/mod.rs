@@ -1,6 +1,6 @@
 pub mod auth;
 pub mod connect;
-mod disconnect;
+pub mod disconnect;
 mod dispatch;
 mod heartbeat;
 mod utils;
