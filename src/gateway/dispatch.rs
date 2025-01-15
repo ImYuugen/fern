@@ -84,11 +84,12 @@ pub async fn handle_dispatch(fwsm: FernWebsocketMessage) {
     match dispatch_event.as_str() {
         // TODO: Handle the 7 gazillion events
         "READY" => {
+            let _ = std::fs::write("./bazinga.json", format!("{}", fwsm.d));
             let ready_event = serde_json::from_value::<ReadyEvent>(fwsm.d);
             let _ready_event = match ready_event {
                 Ok(re) => re,
                 Err(e) => {
-                    error!("You messed up the structs ! {}", e);
+                    error!("You messed up the structs ! {:?}", e);
                     std::process::exit(42);
                 }
             };

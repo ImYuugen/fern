@@ -265,7 +265,11 @@ pub mod guild {
     };
 
     #[derive(serde::Deserialize, Debug)]
-    pub struct PartialGuild;
+    pub struct Guild {
+        /// Snowflake
+        id: String,
+        name: String,
+    }
 
     #[derive(serde::Deserialize, Debug)]
     pub struct GatewayGuild {
@@ -278,20 +282,20 @@ pub mod guild {
         /// Whether it is not accessible in your region
         geo_restricted: Option<bool>,
         member_count: u32,
-        voice_states: Vec<VoiceState>,
-        members: Vec<GuildMember>,
+        voice_states: Option<Vec<VoiceState>>,
+        members: Option<Vec<GuildMember>>,
         channels: Vec<Channel>,
         threads: Vec<Channel>,
         /// Presences of guild members, offline members are not included in large guilds
-        presences: Vec<Presence>,
-        stage_instances: Vec<StageInstance>,
-        guild_scheduled_events: Vec<GuildScheduledEvent>,
+        presences: Option<Vec<Presence>>,
+        stage_instances: Option<Vec<StageInstance>>,
+        guild_scheduled_events: Option<Vec<GuildScheduledEvent>>,
         /// full: everything sent, partial: some is cached, unavailable
         data_mode: String,
-        properties: PartialGuild,
-        stickers: Vec<Sticker>,
-        roles: Vec<Role>,
-        emojis: Vec<Emoji>,
+        properties: Guild,
+        stickers: Option<Vec<Sticker>>,
+        roles: Option<Vec<Role>>,
+        emojis: Option<Vec<Emoji>>,
         /// Number of boosts
         premium_subscription_count: u32,
     }
@@ -395,11 +399,11 @@ pub mod guild {
         unicode_emoji: Option<String>,
         /// Position of this role in the role list
         position: u32,
-        /// The permission bitwise values (why string ???)
-        permissions: String,
+        /// The permission bitwise values
+        permissions: u32,
         /// Whether this role is managed by an integration
         managed: bool,
-        mentionnable: bool,
+        mentionnable: Option<bool>,
         /// IN_PROMPT
         flags: Option<u8>,
         tags: Option<RoleTags>,
