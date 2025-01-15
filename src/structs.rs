@@ -259,7 +259,10 @@ pub mod user {
 }
 
 pub mod guild {
-    use super::{channel::Channel, user::Presence};
+    use super::{
+        channel::Channel,
+        user::{Presence, User},
+    };
 
     #[derive(serde::Deserialize, Debug)]
     pub struct PartialGuild;
@@ -304,15 +307,127 @@ pub mod guild {
     #[derive(serde::Deserialize, Debug)]
     pub struct VoiceState;
     #[derive(serde::Deserialize, Debug)]
-    pub struct StageInstance;
+    pub struct StageInstance {
+        /// Snowflake
+        id: String,
+        /// Snowflake
+        guild_id: String,
+        /// Snowflake
+        channel_id: String,
+        topic: String,
+        /// PUBLIC = 1, GUILD_ONLY
+        privacy_level: u8,
+        // TODO: Link doc
+        /// See invite object
+        invite_code: Option<String>,
+        /// ID of the Scheduled event for this stage instance
+        guild_scheduled_event_id: Option<String>,
+    }
     #[derive(serde::Deserialize, Debug)]
-    pub struct GuildScheduledEvent;
+    pub struct GuildScheduledEvent {
+        /// Snowflake
+        id: String,
+        /// Snowflake
+        guild_id: String,
+        /// Snowflake
+        channel_id: Option<String>,
+        /// Snowflake
+        creator_id: Option<String>,
+        creator: Option<User>, // Partial user
+        name: String,
+        description: Option<String>,
+        /// ISO8601 timestamp
+        scheduled_start_time: String,
+        /// ISO8601 timestamp
+        scheduled_end_time: Option<String>,
+        /// PUBLIC = 1, GUILD_ONLY
+        privacy_level: u8,
+        /// SCHEDULED = 1, ACTIVE, COMPLETED, CANCELED
+        status: u8,
+        /// STAGE_INSTANCE = 1, VOICE, EXTERNAL, PRIME_TIME
+        entity_type: u8,
+        /// Snowflake, ID of the associated entity
+        entity_id: Option<String>,
+        entity_metadata: Option<EntityMetadata>,
+        user_count: Option<u32>,
+        /// CDN hash of the event image
+        image: Option<String>,
+    }
     #[derive(serde::Deserialize, Debug)]
-    pub struct Sticker;
+    pub struct EntityMetadata {
+        location: Option<String>,
+    }
     #[derive(serde::Deserialize, Debug)]
-    pub struct Role;
+    pub struct Sticker {
+        /// Snowflake
+        id: String,
+        /// Snowflake, for standard stickers
+        pack_id: Option<String>,
+        name: String,
+        description: Option<String>,
+        /// Autocomplete/suggestions
+        tags: String,
+        /// STANDARD, GUILD
+        #[serde(rename = "type")]
+        kind: u8,
+        /// PNG = 1, APNG, LOTTIE, GIF
+        format_type: u8,
+        available: Option<bool>,
+        /// Snowflake, the ID of the guild the sticker is attached to
+        guild_id: Option<String>,
+        /// NOTE: Partial user
+        /// Only included if fetched through endpoints with MANAGE_EMOJIS_AND_STICKERS perm
+        user: Option<User>,
+        sort_value: Option<u32>,
+    }
     #[derive(serde::Deserialize, Debug)]
-    pub struct Emoji;
+    pub struct Role {
+        /// Snowflake
+        id: String,
+        name: String,
+        description: Option<String>,
+        /// Hex color code
+        color: u32,
+        /// Whether the role is pinned in the user listing
+        hoist: bool,
+        /// Icon hash
+        icon: Option<String>,
+        unicode_emoji: Option<String>,
+        /// Position of this role in the role list
+        position: u32,
+        /// The permission bitwise values (why string ???)
+        permissions: String,
+        /// Whether this role is managed by an integration
+        managed: bool,
+        mentionnable: bool,
+        /// IN_PROMPT
+        flags: Option<u8>,
+        tags: Option<RoleTags>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct RoleTags {
+        /// Snowflake
+        bot_id: Option<String>,
+        /// Snowflake
+        integration_id: Option<String>,
+        /// Snowflake
+        subscription_listing_id: Option<String>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct Emoji {
+        /// Snowflake, CDN
+        id: Option<String>,
+        /// Name of the emoji, can be null if deleted
+        name: Option<String>,
+        /// Snowflakes of roles allowed to use the emoji
+        roles: Option<Vec<String>>,
+        /// Use who uploaded the emoji
+        user: Option<User>,
+        require_colons: Option<bool>,
+        managed: Option<bool>,
+        animated: Option<bool>,
+        available: Option<bool>,
+    }
 
     #[derive(serde::Deserialize, Debug)]
     pub struct GuildExperiment {

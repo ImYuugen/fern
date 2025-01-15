@@ -19,8 +19,6 @@ struct ReadyEvent {
     v: u8,
     /// The connected user
     user: User,
-    /// Deprecated
-    user_settings: Option<serde_json::Value>,
     /// Preloaded user settings protobuf
     /// https://github.com/dolfies/discord-protos/blob/master/discord_protos/PreloadedUserSettings.proto
     user_settings_proto: Option<String>,
