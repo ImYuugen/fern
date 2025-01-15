@@ -94,7 +94,43 @@ pub mod user {
 
     #[derive(serde::Deserialize, Debug)]
     pub struct Connection {
-        // TODO: /resources/user#connection-object
+        id: String,
+        /// Title of the connection, eg. bluesky, steam, ...
+        #[serde(rename = "type")]
+        kind: String,
+        /// The username of the connection account
+        name: String,
+        verified: bool,
+        /// Service-specific metadata about the connection
+        metadata: Option<serde_json::Value>,
+        /// 0: no one, 1: everyone
+        metadata_visibility: u8,
+        revoked: bool,
+        integrations: Vec<ConnectionIntegration>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ConnectionIntegration {
+        /// Snowflake, can be "twitch-partners" for TP integration
+        id: String,
+        /// Type of integration: twitch, youtube, discord, guild_subscription
+        #[serde(rename = "type")]
+        kind: String,
+        /// The integration account's information
+        account: ConnectionAccount,
+        guild: IntegrationGuild,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ConnectionAccount {
+        id: String,
+        name: String,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct IntegrationGuild {
+        /// Snowflake
+        id: String,
+        name: String,
+        /// The guild's icon hash
+        icon: Option<String>,
     }
 
     #[derive(serde::Deserialize, Debug)]
@@ -115,12 +151,89 @@ pub mod user {
 
     #[derive(serde::Deserialize, Debug)]
     pub struct Activity {
-        // TODO: /resources/presence#activity-object
+        id: String,
+        name: String,
+        /// PLAYING, STREAMING, LISTENING, WATCHING, CUSTOM, COMPETING, HANG
+        #[serde(rename = "type")]
+        kind: u8,
+        /// The Stream URL
+        url: Option<String>,
+        /// UNIX timestamp (ms) of when activity was added to the session
+        created_at: u64,
+        /// ID of the session associated with the activity
+        session_id: Option<String>,
+        /// desktop, xbox, samsung, ios, android, embedded, ps4, ps5
+        platform: Option<String>,
+        supported_platforms: Option<Vec<String>>,
+        timestamps: Option<ActivityTimestamps>,
+        /// Snowflake
+        application_id: Option<String>,
+        /// What the user is currently doing
+        details: Option<String>,
+        /// The user's current party status
+        state: Option<String>,
+        /// The ID of the synced activity (e.g. Spotify song ID)
+        sync_id: Option<String>,
+        /// /resources/presence#activity-flags
+        flags: Option<u16>,
+        /// Custom buttons shown in rich presence (max 2)
+        buttons: Option<Vec<String>>,
+        emoji: Option<ActivityEmoji>,
+        party: Option<ActivityParty>,
+        assets: Option<ActivityAssets>,
+        /// Secrets for rich presence joining/spectating
+        secrets: Option<ActivitySecrets>,
+        /// Additional metadata
+        metadata: Option<ActivityMetadata>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivityTimestamps {
+        // Why are those strings 😭😭😭
+        /// UNIX timestamp (ms) of when the activity starts
+        start: Option<String>,
+        /// UNIX timestamp (ms) of when the activity ends
+        end: Option<String>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivityEmoji {
+        name: String,
+        /// Snowflake
+        id: Option<String>,
+        animated: Option<bool>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivityParty {
+        id: Option<String>,
+        /// current_size, max_size
+        size: Option<[u32; 2]>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivityAssets {
+        /// /resources/presence#activity-image
+        large_image: Option<String>,
+        large_text: Option<String>,
+        small_image: Option<String>,
+        small_text: Option<String>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivitySecrets {
+        /// The secret for joining a party
+        join: Option<String>,
+        // spectate and match are deprecated
+    }
+    /// WARN: This object consists of arbitrary, unsanitized data
+    #[derive(serde::Deserialize, Debug)]
+    pub struct ActivityMetadata {
+        // TODO: If you really want to put all possible fields, you can
+        metadata: serde_json::Value,
     }
 
     #[derive(serde::Deserialize, Debug)]
     pub struct ClientStatus {
-        // TODO: /resources/presence#client-status-object
+        desktop: Option<String>,
+        mobile: Option<String>,
+        web: Option<String>,
+        embedded: Option<String>,
     }
 
     #[derive(serde::Deserialize, Debug)]
@@ -146,9 +259,38 @@ pub mod user {
 }
 
 pub mod guild {
+    use super::{channel::Channel, user::Presence};
+
+    #[derive(serde::Deserialize, Debug)]
+    pub struct PartialGuild;
+
     #[derive(serde::Deserialize, Debug)]
     pub struct GatewayGuild {
         // TODO: /topics/gateway-events#gateway-guild-object
+        /// ISO8601 timestamp of when the guild was joined
+        joined_at: String,
+        large: bool,
+        /// Can be due to an outage
+        unavailable: Option<bool>,
+        /// Whether it is not accessible in your region
+        geo_restricted: Option<bool>,
+        member_count: u32,
+        voice_states: Vec<VoiceState>,
+        members: Vec<GuildMember>,
+        channels: Vec<Channel>,
+        threads: Vec<Channel>,
+        /// Presences of guild members, offline members are not included in large guilds
+        presences: Vec<Presence>,
+        stage_instances: Vec<StageInstance>,
+        guild_scheduled_events: Vec<GuildScheduledEvent>,
+        /// full: everything sent, partial: some is cached, unavailable
+        data_mode: String,
+        properties: PartialGuild,
+        stickers: Vec<Sticker>,
+        roles: Vec<Role>,
+        emojis: Vec<Emoji>,
+        /// Number of boosts
+        premium_subscription_count: u32,
     }
     #[derive(serde::Deserialize, Debug)]
     pub struct GuildJoinRequest {
@@ -158,6 +300,19 @@ pub mod guild {
     pub struct GuildMember {
         // TODO: /resources/guild#guild-member-object
     }
+    // TODO: Those who implement :skull: ------>
+    #[derive(serde::Deserialize, Debug)]
+    pub struct VoiceState;
+    #[derive(serde::Deserialize, Debug)]
+    pub struct StageInstance;
+    #[derive(serde::Deserialize, Debug)]
+    pub struct GuildScheduledEvent;
+    #[derive(serde::Deserialize, Debug)]
+    pub struct Sticker;
+    #[derive(serde::Deserialize, Debug)]
+    pub struct Role;
+    #[derive(serde::Deserialize, Debug)]
+    pub struct Emoji;
 
     #[derive(serde::Deserialize, Debug)]
     pub struct GuildExperiment {
