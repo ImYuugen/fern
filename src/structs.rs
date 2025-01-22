@@ -153,7 +153,7 @@ pub mod user {
 
     #[derive(serde::Deserialize, Debug)]
     pub struct Presence {
-        user: User, // Partial
+        user: PartialUser,
         /// Snowflake
         guild_id: Option<String>,
         /// One of: online, dnd, idle, invisible, offline, unknown
@@ -466,7 +466,7 @@ pub mod guild {
         /// Snowflakes of roles allowed to use the emoji
         roles: Option<Vec<String>>,
         /// Use who uploaded the emoji
-        user: Option<User>,
+        user: Option<Box<User>>,
         require_colons: Option<bool>,
         managed: Option<bool>,
         animated: Option<bool>,

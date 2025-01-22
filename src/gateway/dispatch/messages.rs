@@ -85,6 +85,33 @@ pub fn message_create(fwsm: FernWebsocketMessage) {
     }
 }
 
-pub fn message_delete(_fwsm: FernWebsocketMessage) {}
+#[derive(serde::Deserialize, Debug)]
+struct MessageDelete {
+    id: String,
+    channel_id: String,
+    guild_id: Option<String>,
+}
 
-pub fn message_update(_fwsm: FernWebsocketMessage) {}
+pub fn message_delete(fwsm: FernWebsocketMessage) {
+    let message = serde_json::from_value::<MessageDelete>(fwsm.d);
+    match message {
+        Ok(m) => {
+            debug!("message {} got deleted", m.id);
+        }
+        Err(e) => {
+            error!("You messed up the structs ! {:?}", e);
+        }
+    }
+}
+
+pub fn message_update(fwsm: FernWebsocketMessage) {
+    let message = serde_json::from_value::<Message>(fwsm.d);
+    match message {
+        Ok(m) => {
+            debug!("message {} got updated, new content : {}", m.id, m.content);
+        }
+        Err(e) => {
+            error!("You messed up the structs ! {:?}", e);
+        }
+    }
+}
