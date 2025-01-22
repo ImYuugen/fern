@@ -62,7 +62,7 @@ In the future, add wrappers around the app so that scripts and whatnot can expan
   - [ ] RESUMED
   - [ ] REMOTE_COMMAND
   - [ ] PRESENCE_UPDATE
-  - [ ] MESSAGE_{CREATE,UPDATE,DELETE}
+  - [x] MESSAGE_{CREATE,UPDATE,DELETE}
   - [ ] CALL_{CREATE,UPDATE,DELETE}
 
 ## Contributing
