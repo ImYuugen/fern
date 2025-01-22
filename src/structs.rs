@@ -1,7 +1,6 @@
 pub mod user {
     use super::guild::GuildMember;
 
-    /// Represents both full and partial user
     #[derive(serde::Deserialize, Debug)]
     pub struct User {
         /// ID of the user, Snowflake
@@ -27,19 +26,19 @@ pub mod user {
         nsfw_enabled: Option<bool>,
         /// len < 40, The user's pronouns #wokent :pensive:
         pronouns: Option<String>,
-        /// len < 190, The user's bio - NOT in partial user -
+        /// len < 190, The user's bio
         bio: Option<String>,
         /// The user's banner hash, see CDN Formatting
         banner: Option<String>,
         /// The user's banner color in hex color code
         accent_color: Option<u32>,
         locale: Option<String>,
-        /// Whether the user is verified - NOT in partial user -
+        /// Whether the user is verified
         verified: Option<bool>,
         email: Option<String>,
         /// The user's phone number, E.164-formatted
         phone: Option<String>,
-        /// The type of premium plan: NONE (0), TIER_{1, 2, 3} - NOT in partial user -
+        /// The type of premium plan: NONE (0), TIER_{1, 2, 3}
         premium_type: Option<i32>,
         /// The ID of ther user's personal, non-employee user account, Snowflake
         personnal_connection_id: Option<String>,
@@ -57,6 +56,23 @@ pub mod user {
         has_bounced_email: Option<bool>,
         /// WEBAUTHN = 1, TOTP, SMS
         authenticator_types: Option<Vec<u8>>,
+    }
+    #[derive(serde::Deserialize, Debug)]
+    pub struct PartialUser {
+        /// Snowflake
+        id: String,
+        pub username: String,
+        discriminator: String,
+        global_name: Option<String>,
+        /// See CDN Formatting
+        avatar: Option<String>,
+        avatar_decoration_data: Option<AvatarDecorationData>,
+        primary_guild: Option<PrimaryGuild>,
+        bot: Option<bool>,
+        system: Option<bool>,
+        banner: Option<bool>,
+        accent_color: Option<u32>,
+        public_flags: Option<u64>,
     }
     #[derive(serde::Deserialize, Debug)]
     struct AvatarDecorationData {
@@ -481,9 +497,26 @@ pub mod guild {
 }
 
 pub mod channel {
+    use super::user::User;
+
     #[derive(serde::Deserialize, Debug)]
     pub struct Channel {
         // TODO: /resources/channel#channel-object
+    }
+
+    #[derive(serde::Deserialize, Debug)]
+    pub struct PartialChannel {
+        /// Snowflake
+        id: String,
+        #[serde(rename = "type")]
+        kind: u8,
+        name: Option<String>,
+        // Partial
+        recipients: Option<Vec<User>>,
+        /// See CDN Formatting
+        icon: Option<String>,
+        /// Snowflake
+        guild_id: Option<String>,
     }
 }
 
