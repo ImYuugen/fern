@@ -58,7 +58,7 @@ In the future, add wrappers around the app so that scripts and whatnot can expan
 - [x] Maintain stable gateway connection
 - [ ] Handle Dispatch
   - [x] READY
-  - [ ] READY_SUPPLEMENTAL
+  - [x] READY_SUPPLEMENTAL
   - [ ] RESUMED
   - [ ] REMOTE_COMMAND
   - [ ] PRESENCE_UPDATE

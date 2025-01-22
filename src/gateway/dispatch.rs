@@ -5,7 +5,7 @@ use log::{debug, error, trace};
 use super::utils::FernWebsocketMessage;
 use crate::structs::{
     channel::Channel,
-    guild::{GatewayGuild, GuildExperiment, GuildJoinRequest, GuildMember},
+    guild::{GatewayGuild, GuildExperiment, GuildJoinRequest, GuildMember, VoiceState},
     misc::GatewayApplication,
     user::{Connection, MergedPresences, Presence, Relationship, User, UserExperiment},
 };
@@ -74,6 +74,22 @@ struct ReadyEvent {
     guild_experiments: Vec<GuildExperiment>,
 }
 
+#[derive(serde::Deserialize, Debug)]
+struct ReadySupplementalEvent {
+    guilds: Option<Vec<SupplementalGuild>>,
+    merged_members: Option<Vec<Vec<GuildMember>>>,
+    merged_presences: Option<MergedPresences>,
+    lazy_private_channels: Option<Vec<Channel>>,
+    disclose: Option<Vec<String>>,
+}
+#[derive(serde::Deserialize, Debug)]
+struct SupplementalGuild {
+    /// Snowflake
+    id: String,
+    voice_states: Vec<VoiceState>,
+    // INFO: Two other fields: activity_instance, embedded_activities
+}
+
 pub async fn handle_dispatch(fwsm: FernWebsocketMessage) {
     let Some(dispatch_event) = fwsm.t else {
         error!("Received Dispatch with no t !");
@@ -82,28 +98,31 @@ pub async fn handle_dispatch(fwsm: FernWebsocketMessage) {
     debug!("Received {} dispatch", dispatch_event.as_str());
 
     match dispatch_event.as_str() {
-        // TODO: Handle the 7 gazillion events
         "READY" => {
-            let _ = std::fs::write("./bazinga.json", format!("{}", fwsm.d));
             let ready_event = serde_json::from_value::<ReadyEvent>(fwsm.d);
-            let _ready_event = match ready_event {
-                Ok(re) => re,
+            match ready_event {
+                Ok(_) => {
+                    trace!("Succesfully translated READY payload");
+                }
                 Err(e) => {
                     error!("You messed up the structs ! {:?}", e);
                     std::process::exit(42);
                 }
             };
-            trace!("Succesfully translated READY payload");
         }
         "READY_SUPPLEMENTAL" => {
-            trace!("READY_SUPPLEMENTAL {}", fwsm.d);
+            let rs_event = serde_json::from_value::<ReadySupplementalEvent>(fwsm.d);
+            match rs_event {
+                Ok(_) => {
+                    trace!("Succesfully translated READY_SUPPLEMENTAL payload");
+                }
+                Err(e) => {
+                    error!("You messed up the structs ! {:?}", e);
+                }
+            };
         }
-        "RESUMED" => {
-            trace!("RESUMED {}", fwsm.d);
+        e => {
+            error!("Unimplemented {} {}", e, fwsm.d);
         }
-        "SESSIONS_REPLACE" => {
-            trace!("SESSIONS_REPLACE {}", fwsm.d);
-        }
-        ev => error!("Unimplemented {} : {}", ev, fwsm.d),
     }
 }

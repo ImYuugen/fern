@@ -1,4 +1,6 @@
 pub mod user {
+    use super::guild::GuildMember;
+
     /// Represents both full and partial user
     #[derive(serde::Deserialize, Debug)]
     pub struct User {
@@ -255,6 +257,28 @@ pub mod user {
         aa_mode: i8,
         /// Is analytics trigger debugging enabled, 0 or 1
         trigger_debugging: i8,
+    }
+
+    #[derive(serde::Deserialize, Debug)]
+    pub struct VoiceState {
+        /// Snowflake
+        guild_id: Option<String>,
+        /// Snowflake
+        channel_id: Option<String>,
+        /// Snowflake
+        user_id: String,
+        member: Option<GuildMember>,
+        session_id: String,
+        // PERF: Pack those into u8
+        deaf: bool,
+        mute: bool,
+        self_deaf: bool,
+        self_mute: bool,
+        self_stream: Option<bool>,
+        self_video: bool,
+        suppress: bool,
+        /// ISO8601 timestamp
+        request_to_speak_timestamp: Option<String>,
     }
 }
 
