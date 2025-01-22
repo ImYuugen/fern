@@ -1,14 +1,16 @@
-use std::collections::HashMap;
-
-use log::{debug, error, trace};
-
-use super::utils::FernWebsocketMessage;
-use crate::structs::{
-    channel::Channel,
-    guild::{GatewayGuild, GuildExperiment, GuildJoinRequest, GuildMember, VoiceState},
-    misc::GatewayApplication,
-    user::{Connection, MergedPresences, Presence, Relationship, User, UserExperiment},
+use crate::{
+    gateway::utils::FernWebsocketMessage,
+    structs::{
+        channel::Channel,
+        guild::{GatewayGuild, GuildExperiment, GuildJoinRequest, GuildMember, VoiceState},
+        misc::GatewayApplication,
+        user::{Connection, MergedPresences, Presence, Relationship, User, UserExperiment},
+    },
 };
+
+use log::{error, trace};
+
+use std::collections::HashMap;
 
 /// The body of the message sent on READY Dispatch event
 #[derive(serde::Deserialize, Debug)]
@@ -90,39 +92,27 @@ struct SupplementalGuild {
     // INFO: Two other fields: activity_instance, embedded_activities
 }
 
-pub async fn handle_dispatch(fwsm: FernWebsocketMessage) {
-    let Some(dispatch_event) = fwsm.t else {
-        error!("Received Dispatch with no t !");
-        return;
+pub fn translate_ready(fwsm: FernWebsocketMessage) {
+    let ready_event = serde_json::from_value::<ReadyEvent>(fwsm.d);
+    match ready_event {
+        Ok(_) => {
+            trace!("Succesfully translated READY payload");
+        }
+        Err(e) => {
+            error!("You messed up the structs ! {:?}", e);
+            std::process::exit(42);
+        }
     };
-    debug!("Received {} dispatch", dispatch_event.as_str());
+}
 
-    match dispatch_event.as_str() {
-        "READY" => {
-            let ready_event = serde_json::from_value::<ReadyEvent>(fwsm.d);
-            match ready_event {
-                Ok(_) => {
-                    trace!("Succesfully translated READY payload");
-                }
-                Err(e) => {
-                    error!("You messed up the structs ! {:?}", e);
-                    std::process::exit(42);
-                }
-            };
+pub fn translate_ready_supplemental(fwsm: FernWebsocketMessage) {
+    let rs_event = serde_json::from_value::<ReadySupplementalEvent>(fwsm.d);
+    match rs_event {
+        Ok(_) => {
+            trace!("Succesfully translated READY_SUPPLEMENTAL payload");
         }
-        "READY_SUPPLEMENTAL" => {
-            let rs_event = serde_json::from_value::<ReadySupplementalEvent>(fwsm.d);
-            match rs_event {
-                Ok(_) => {
-                    trace!("Succesfully translated READY_SUPPLEMENTAL payload");
-                }
-                Err(e) => {
-                    error!("You messed up the structs ! {:?}", e);
-                }
-            };
+        Err(e) => {
+            error!("You messed up the structs ! {:?}", e);
         }
-        e => {
-            error!("Unimplemented {} {}", e, fwsm.d);
-        }
-    }
+    };
 }
