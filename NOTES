@@ -1,0 +1,21 @@
+When creating structs to represent responses, prefer Option<Box<T>> instead of Option<T>
+when sizeof T > 8, as Option<T> is 8 bytes, and only allocates if needed
+
+((((
+    IPC Options:
+    - Shared Memory:
+        + Very fast
+        - Potentially unsafe, world visible
+        - Need to account for racing conditions
+    - Message Passing:
+        + Simple
+        + No sync required
+        - Slower
+        - Higher resource consumption
+))))
+Just use iceoryx2 cuh
+WARNING: DO NOT USE HEAP OR STATIC MEMORY AS IT IS NOT SHARED, CREATE SPECIAL STRUCT FOR IPC SENDING/RECEIVING
+- No Vec, use [T; N]
+- No String or &str, only [{char,u8}; N]
+- Don't use Boxes
+- No pointer logic whatsoever

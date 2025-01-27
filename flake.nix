@@ -30,6 +30,9 @@
           rust-analyzer
           rust-bin.stable.latest.default
           jq
+          pkg-config
+          openssl
+          glib-networking
         ];
         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${builtins.toString (pkgs.lib.makeLibraryPath buildInputs)}";
         GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules/";
