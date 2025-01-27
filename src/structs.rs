@@ -153,7 +153,7 @@ pub mod user {
 
     #[derive(serde::Deserialize, Debug)]
     pub struct Presence {
-        user: PartialUser,
+        user_id: String,
         /// Snowflake
         guild_id: Option<String>,
         /// One of: online, dnd, idle, invisible, offline, unknown
