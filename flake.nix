@@ -26,24 +26,10 @@
       devShells.${system}.default = pkgs.mkShell rec {
         buildInputs = with pkgs; [
           pre-commit
-          libxkbcommon
-          wayland
-          xorg.libX11
-          xorg.libXcursor
-          xorg.libXrandr
-          xorg.libXi
-          pkg-config
-          openssl
-          glib-networking
-          gdk-pixbuf
-          cairo
-          pango
-          gtk3
-          libsoup_3
-          webkitgtk_4_1
           rustacean.packages.${system}.codelldb
           rust-analyzer
           rust-bin.stable.latest.default
+          jq
         ];
         LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${builtins.toString (pkgs.lib.makeLibraryPath buildInputs)}";
         GIO_MODULE_DIR="${pkgs.glib-networking}/lib/gio/modules/";
