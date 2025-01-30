@@ -7,15 +7,20 @@ Very WIP, you can risk getting banned if you try to use it.
 I'm mostly making this out of curiosity...
 Also because I think electron-based webapps are spawns of the devil and should be replaced
 
+I don't believe there exists a discord client written in Rust, not on my watch ! \
+Also I like the idea of using IPC to enable the creation of custom overlays,
+OBS plugins, and activities without too much hassle. \
+Currently, you can only *send* data to discord using their IPC solution, I want it to go both ways.
+
 As for the name, the rendering library is called Xilem, so I just chose a vascular plant's name
 Also I like plants
 
 ### How ?
-First and foremost, wrappers need to be created around Discord's API, a lot of it is not officially documented, some digging is needed.
-After those are done, create UI elements and link them to the wrapper.
-
-In the future, add wrappers around the app so that scripts and whatnot can expand its behaviour.
-
+Before anything, we need to understand how Discord's APIs and Gateways work,
+since it is not officially documented, some digging is needed.
+Once this is done, create wrappers around said API to make development easier.
+Next, write an IPC system to send/receive events, MAKE IT SECURE PUH-LEASE.
+Then write the UI, badabim badaboom Fern is born.
 
 **Features & TODOs**
 ✨ = UI Done
