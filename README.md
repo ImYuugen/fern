@@ -1,3 +1,5 @@
+# This repo is now on [codeberg](https://codeberg.org/Yuugen/fern)
+
 # Fern 🌿
 
 A native discord client aimed to be fast, responsive and extensible. *(knocking on wood)*
